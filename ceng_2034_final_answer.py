@@ -10,7 +10,7 @@ from threading import Thread
 from multiprocessing import Process
 import multiprocessing
 
-#create a child process and print its pid
+#Assignment 1: Create a child process and print its pid
 pid = os.fork()
 if(pid > 0):
 	print("PID of the parent process: {}" .format(os.getpid()))
@@ -18,10 +18,7 @@ else:
 	print("PID of the child process: {}".format(os.getpid()))
 
 
-print("\n")
-
-
-#download the files via given URL list with child process
+#Assignment 2: Download the files via given URL list with child process
 urls = ['http://wiki.netseclab.mu.edu.tr/images/thumb/f/f7/MSKU-BlockchainResearchGroup.jpeg/300px-MSKU-BlockchainResearchGroup.jpeg',
 'https://upload.wikimedia.org/wikipedia/tr/9/98/Mu%C4%9Fla_S%C4%B1tk%C4%B1_Ko%C3%A7man_%C3%9Cniversitesi_logo.png',
 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Hawai%27i.jpg/1024px-Hawai%27i.jpg',
@@ -40,28 +37,29 @@ def download_file(url, file_name):
 		
 	open(file, "wb").write(r.content)
 
+#Assignment 2 & 3: Function to download the files with child process and avoid the orphan situation with os.wait()
 def childProcess(pid):
 
 	children = []
 
-	if pid > 0:
-		children.append(pid)
+	if pid:
+		status = os.wait()
+		print("\nIn parent process:", os.getpid())
+		print("Terminated child's process id:", status[0])
+		print("Signal number that killed the child process:", status[1])
 	else:
+		print("\nIn Child process with process ID: ", os.getpid())
 		#the child process will download the files
 		for u in urls:
 			filename = urlparse(u)
 			download_file(u, os.path.basename(filename.path))
-		os._exit(0)
+		
 
-	#to avoid orphan processes 
-	for i, proc in enumerate(children):
-		os.waitpid(proc, 0)
-	print("Parent process is closing")
 
 childProcess(pid)
 
 
-#control the duplicates in the folder
+#Assignment 4: Control the duplicates in the current folder
 def findFiles(current_directory):
 	listFiles = os.listdir(current_directory)
 	allFiles = []
@@ -72,13 +70,14 @@ def findFiles(current_directory):
 	
 	return allFiles
 
-
+#function to return the encoded data of files in hexadecimal format
 def file_as_bytes(fname):
 	hash_md5 = hashlib.md5()
 	with open(fname,"rb") as f:
 		for chunk in iter(lambda: f.read(4096), b""):
 			hash_md5.update(chunk)
 	return hash_md5.hexdigest()
+
 
 def checkDuplicates(array):
 	for i in array:
@@ -88,6 +87,7 @@ def checkDuplicates(array):
 
 	return False
 
+#to check the duplicates in the array
 def findDuplicates(array):
 	size = len(array)
 	duplicates = []
@@ -123,6 +123,8 @@ def fileCheck():
 			file_Name = files[i]
 			head_tail = os.path.split(file_Name)
 			print(head_tail[1])
+
+#to check duplicates with multiprocessing
 start = time.time()
 processes = []
 for i in range(multiprocessing.cpu_count()):
@@ -137,8 +139,7 @@ end = time.time()
 
 print("Elapsed time with multiprocessing: %s" % (end - start))
 
-print("\n")
-
+#to check duplicates with multithreading
 hexdig = []
 
 start = time.time()
@@ -152,3 +153,6 @@ for thread in threads:
 	thread.join()
 
 end = time.time()
+
+print("Elapsed time with multithreading: %s" % (end - start))
+
