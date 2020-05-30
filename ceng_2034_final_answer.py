@@ -1,17 +1,14 @@
 #Ayşe Ceren Çiçek - 170709009
 
 #! /usr/bin/python3
-import os
-import requests
-import sys
-import re
-import uuid
-import os.path
+import os,requests, sys, re, uuid, os.path, time
 from os import path
 import urllib.parse
 from urllib.parse import urlparse
 import hashlib
-import threading
+from threading import Thread
+from multiprocessing import Process
+import multiprocessing
 
 #create a child process and print its pid
 pid = os.fork()
@@ -108,24 +105,50 @@ current_directory = (os.path.abspath(os.getcwd()))
 hexdig = []
 files = findFiles(current_directory)
 
-for i in files:
-	a = file_as_bytes(i)
-	hexdig.append(a)
-	print(a)
+
+def fileCheck():
+	for i in files:
+		a = file_as_bytes(i)
+		hexdig.append(a)
+		#print(a)
+
+	print("\n")
+
+	duplicate = checkDuplicates(hexdig)
+	if duplicate == 0:
+		print("No duplicate in the folder.")
+	else:
+		print("The duplicate files:")
+		for i in duplicate:
+			file_Name = files[i]
+			head_tail = os.path.split(file_Name)
+			print(head_tail[1])
+start = time.time()
+processes = []
+for i in range(multiprocessing.cpu_count()):
+	processes.append(Process(target=fileCheck))
+
+for process in processes:
+	process.start()
+for process in processes:
+	process.join()
+
+end = time.time()
+
+print("Elapsed time with multiprocessing: %s" % (end - start))
 
 print("\n")
 
-duplicate = checkDuplicates(hexdig)
-if duplicate == 0:
-	print("No duplicate in the folder.")
-else:
-	print("The duplicate files:")
-	for i in duplicate:
-		file_Name = files[i]
-		head_tail = os.path.split(file_Name)
-		print(head_tail[1])
+hexdig = []
 
+start = time.time()
+threads = []
+for i in range(multiprocessing.cpu_count()):
+	threads.append(Thread(target=fileCheck))
 
+for thread in threads:
+    	thread.start()
+for thread in threads:
+	thread.join()
 
-
-
+end = time.time()
